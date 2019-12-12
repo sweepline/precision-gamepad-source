@@ -1,5 +1,4 @@
-#include <windows.h>
-// #include <gamepad.h>
+#include <windows.h> // Needed for XInput architecture detection
 #include <Xinput.h>
 #include <obs-module.h>
 #include <stdlib.h>
@@ -89,7 +88,7 @@ gs_vertbuffer_t *create_vbuffer() {
 static const char *pg_getname(void *unused)
 {
 	UNUSED_PARAMETER(unused);
-	return obs_module_text("Name");
+	return obs_module_text("PrecisionGamepadSource");
 }
 
 static void pg_update(void *data, obs_data_t *settings)
@@ -167,6 +166,7 @@ static obs_properties_t *pg_properties(void *unused)
 
 	// obs_properties_add_button(props, "throttle_button", obs_module_text("ThrottleButton"), getButton(2));
 	obs_properties_add_int_slider(props, "deadzone", obs_module_text("Deadzone"), 0, THUMBLX_MAX, 1);
+	obs_properties_add_int_slider(props, "player_id", obs_module_text("Controller"), 0, 3, 1);
 
 	obs_properties_add_int(props, "width",
 			       obs_module_text("Width"), 0, 4096,
@@ -355,10 +355,10 @@ static void pg_defaults(obs_data_t *settings)
 {
 	obs_data_set_default_int(settings, "throttle_color", 0xFF4DEC53);
 	obs_data_set_default_int(settings, "brake_color", 0xFFEC584D);
-	obs_data_set_default_int(settings, "steer_color", 0xFFECBC4D);
+	obs_data_set_default_int(settings, "steer_color", 0xFF4DBCEC);
 	obs_data_set_default_int(settings, "background_color", 0xFFE2E2E2);
-	obs_data_set_default_int(settings, "width", 400);
-	obs_data_set_default_int(settings, "height", 400);
+	obs_data_set_default_int(settings, "width", 500);
+	obs_data_set_default_int(settings, "height", 300);
 	obs_data_set_default_int(settings, "player_id", 0);
 	obs_data_set_default_int(settings, "throttle_button", XINPUT_GAMEPAD_A);
 	obs_data_set_default_int(settings, "brake_button", XINPUT_GAMEPAD_X);
@@ -377,7 +377,7 @@ struct obs_source_info pg_source_info = {
 	.video_tick = pg_tick,
 	.get_defaults = pg_defaults,
 	.get_properties = pg_properties,
-	.icon_type = OBS_ICON_TYPE_GAME_CAPTURE,
+	// .icon_type = OBS_ICON_TYPE_GAME_CAPTURE,
 	.get_width = pg_get_width,
 	.get_height = pg_get_height,
 };

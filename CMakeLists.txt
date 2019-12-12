@@ -10,6 +10,7 @@ set(precision-gamepad-source_SOURCES
 
 add_library(precision-gamepad-source MODULE
 	${precision-gamepad-source_SOURCES})
+
 target_link_libraries(precision-gamepad-source
 	libobs
 	XInput
