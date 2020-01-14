@@ -5,3 +5,5 @@ OBS plugin for simple gamepad visualization, made to replace https://github.com/
 
 * Still has hardcoded buttons
 * Still needs transparency settings
+* Outlines
+
