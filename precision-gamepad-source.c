@@ -111,8 +111,8 @@ static void pg_update(void *data, obs_data_t *settings)
 
 	const uint32_t TRANS_MASK = 0x00FFFFFF;
 	const uint32_t SHIFT = 24;
-	uint32_t foreground_mask = ((foreground_transparency << SHIFT) | TRANS_MASK);
-	uint32_t background_mask = ((background_transparency << SHIFT) | TRANS_MASK);
+	uint32_t foreground_mask = (foreground_transparency << SHIFT) | TRANS_MASK;
+	uint32_t background_mask = (background_transparency << SHIFT) | TRANS_MASK;
 
 
 	context->throttle_color = foreground_mask & throttle_color;
@@ -180,7 +180,6 @@ static obs_properties_t *pg_properties(void *unused)
 	obs_properties_add_int_slider(props, "foreground_transparency",
 				obs_module_text("Transparency.Foreground"), 0, 255, 1);
 
-	// obs_properties_add_button(props, "throttle_button", obs_module_text("ThrottleButton"), getButton(2));
 	obs_properties_add_int_slider(props, "deadzone", obs_module_text("Deadzone"), 0, THUMBLX_MAX, 1);
 	obs_properties_add_int_slider(props, "player_id", obs_module_text("Controller"), 0, 3, 1);
 
@@ -334,12 +333,6 @@ static void pg_render(void *data, gs_effect_t *effect)
 			gs_draw(GS_TRISTRIP, 20, 4);
 		}
 	}
-
-	// gs_draw(GS_TRIS, 0, 5); // Throttle
-	// gs_draw(GS_TRIS, 5, 5); // Brake
-	// gs_draw(GS_TRIS, 10, 3); // Left
-	// gs_draw(GS_TRIS, 13, 3); // Right
-	// gs_draw_sprite(0, 0, context->width, context->height);
 
 	gs_technique_end_pass(tech);
 	gs_technique_end(tech);
