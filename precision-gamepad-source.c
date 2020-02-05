@@ -39,7 +39,9 @@ struct pg_data {
 	uint32_t brake_color;
 	uint32_t steer_color;
 	uint32_t background_color;
-	uint32_t background_transperancy;
+	uint32_t background_transparency;
+	uint32_t foreground_transparency;
+	bool outline;
 
 	uint32_t width;
 	uint32_t height;
@@ -98,6 +100,8 @@ static void pg_update(void *data, obs_data_t *settings)
 	uint32_t brake_color = (uint32_t)obs_data_get_int(settings, "brake_color");
 	uint32_t steer_color = (uint32_t)obs_data_get_int(settings, "steer_color");
 	uint32_t background_color = (uint32_t)obs_data_get_int(settings, "background_color");
+	uint32_t background_transparency = (uint32_t)obs_data_get_int(settings, "background_transparency");
+	uint32_t foreground_transparency = (uint32_t)obs_data_get_int(settings, "foreground_transparency");
 	uint32_t width = (uint32_t)obs_data_get_int(settings, "width");
 	uint32_t height = (uint32_t)obs_data_get_int(settings, "height");
 	int player_id = obs_data_get_int(settings, "player_id");
@@ -105,10 +109,18 @@ static void pg_update(void *data, obs_data_t *settings)
 	WORD brake_button = (WORD)obs_data_get_int(settings, "brake_button");
 	SHORT deadzone = (SHORT)obs_data_get_int(settings, "deadzone");
 
-	context->throttle_color = throttle_color;
-	context->brake_color = brake_color;
-	context->steer_color = steer_color;
-	context->background_color = background_color;
+	const uint32_t TRANS_MASK = 0x00FFFFFF;
+	const uint32_t SHIFT = 24;
+	uint32_t foreground_mask = ((foreground_transparency << SHIFT) | TRANS_MASK);
+	uint32_t background_mask = ((background_transparency << SHIFT) | TRANS_MASK);
+
+
+	context->throttle_color = foreground_mask & throttle_color;
+	context->brake_color = foreground_mask & brake_color;
+	context->steer_color = foreground_mask & steer_color;
+	context->background_color = background_mask & background_color;
+	context->background_transparency = background_transparency;
+	context->foreground_transparency = foreground_transparency;
 	context->width = width;
 	context->height = height;
 	context->player_id = player_id;
@@ -156,17 +168,38 @@ static obs_properties_t *pg_properties(void *unused)
 	obs_properties_t *props = obs_properties_create();
 
 	obs_properties_add_color(props, "throttle_color",
-				 obs_module_text("Color.Throttle"));
+				obs_module_text("Color.Throttle"));
 	obs_properties_add_color(props, "brake_color",
-				 obs_module_text("Color.Brake"));
+				obs_module_text("Color.Brake"));
 	obs_properties_add_color(props, "steer_color",
-				 obs_module_text("Color.Steer"));
+				obs_module_text("Color.Steer"));
 	obs_properties_add_color(props, "background_color",
-				 obs_module_text("Color.Background"));
+				obs_module_text("Color.Background"));
+	obs_properties_add_int_slider(props, "background_transparency",
+				obs_module_text("Transparency.Background"), 0, 255, 1);
+	obs_properties_add_int_slider(props, "foreground_transparency",
+				obs_module_text("Transparency.Foreground"), 0, 255, 1);
 
 	// obs_properties_add_button(props, "throttle_button", obs_module_text("ThrottleButton"), getButton(2));
 	obs_properties_add_int_slider(props, "deadzone", obs_module_text("Deadzone"), 0, THUMBLX_MAX, 1);
 	obs_properties_add_int_slider(props, "player_id", obs_module_text("Controller"), 0, 3, 1);
+
+
+	obs_property_t *throttle_list = obs_properties_add_list(props, "throttle_button", obs_module_text("Button.Throttle"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(throttle_list, "X", XINPUT_GAMEPAD_X);
+	obs_property_list_add_int(throttle_list, "Y", XINPUT_GAMEPAD_Y);
+	obs_property_list_add_int(throttle_list, "A", XINPUT_GAMEPAD_A);
+	obs_property_list_add_int(throttle_list, "B", XINPUT_GAMEPAD_B);
+	obs_property_list_add_int(throttle_list, "LS", XINPUT_GAMEPAD_LEFT_SHOULDER);
+	obs_property_list_add_int(throttle_list, "RS", XINPUT_GAMEPAD_RIGHT_SHOULDER);
+
+	obs_property_t *brake_list = obs_properties_add_list(props, "brake_button", obs_module_text("Button.Brake"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(brake_list, "X", XINPUT_GAMEPAD_X);
+	obs_property_list_add_int(brake_list, "Y", XINPUT_GAMEPAD_Y);
+	obs_property_list_add_int(brake_list, "A", XINPUT_GAMEPAD_A);
+	obs_property_list_add_int(brake_list, "B", XINPUT_GAMEPAD_B);
+	obs_property_list_add_int(brake_list, "LS", XINPUT_GAMEPAD_LEFT_SHOULDER);
+	obs_property_list_add_int(brake_list, "RS", XINPUT_GAMEPAD_RIGHT_SHOULDER);
 
 	obs_properties_add_int(props, "width",
 			       obs_module_text("Width"), 0, 4096,
@@ -353,15 +386,18 @@ static uint32_t pg_get_height(void *data)
 
 static void pg_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_int(settings, "throttle_color", 0xFF4DEC53);
-	obs_data_set_default_int(settings, "brake_color", 0xFFEC584D);
-	obs_data_set_default_int(settings, "steer_color", 0xFF4DBCEC);
+	obs_data_set_default_int(settings, "throttle_color", 0xFF61BC78);
+	obs_data_set_default_int(settings, "brake_color", 0xFF403DA6);
+	obs_data_set_default_int(settings, "steer_color", 0xFF72B8E9);
 	obs_data_set_default_int(settings, "background_color", 0xFFE2E2E2);
+
+	obs_data_set_default_int(settings, "background_transparency", 150);
+	obs_data_set_default_int(settings, "foreground_transparency", 255);
 	obs_data_set_default_int(settings, "width", 500);
 	obs_data_set_default_int(settings, "height", 300);
 	obs_data_set_default_int(settings, "player_id", 0);
-	obs_data_set_default_int(settings, "throttle_button", XINPUT_GAMEPAD_A);
-	obs_data_set_default_int(settings, "brake_button", XINPUT_GAMEPAD_X);
+	obs_data_set_default_int(settings, "throttle_button", XINPUT_GAMEPAD_X);
+	obs_data_set_default_int(settings, "brake_button", XINPUT_GAMEPAD_RIGHT_SHOULDER);
 	obs_data_set_default_int(settings, "deadzone", 7000);
 }
 
