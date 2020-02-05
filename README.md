@@ -7,5 +7,5 @@ OBS plugin for simple gamepad visualization, made to replace https://github.com/
 3. Make sure to re-add the plugin for best practice
 
 ## TODO
-* Outlines (This is ass to do as I have to manually draw the lines...)
+* Outlines (This is annoying to do as I have to manually draw the lines... I should make a file to load for the geometries.)
 * DirectInput (This is even worse...)
